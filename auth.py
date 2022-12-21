@@ -3,6 +3,7 @@ import json
 from requests.cookies import RequestsCookieJar
 import requests as req
 import re
+from constants import DOMAIN
 from utils import DataclassJSONEncoder, dict_to_dataclass
 
 
@@ -32,7 +33,7 @@ def auth(login: str, password: str) -> MoodleSession:
         'Content-Type': 'application/x-www-form-urlencoded'
     }
 
-    response = req.post("https://edu.vsu.ru/login/index.php",
+    response = req.post(f'https://{DOMAIN}/login/index.php',
                         cookies=auth_preparation_result.auth_cookies, headers=headers, data=data)
 
     return MoodleSession(_get_api_token_key(response.text), response.history[0].cookies['MoodleSession'])
@@ -49,7 +50,7 @@ def restore_session(filename: str) -> MoodleSession:
 
 
 def _get_auth_preparation_result() -> _AuthPreparationResult:
-    response = req.get('https://edu.vsu.ru/login/index.php')
+    response = req.get(f'https://{DOMAIN}/login/index.php')
 
     match = re.search(
         r'<(?:.*?)name="logintoken"(?:.*?)value="(.*?)">', response.text)
@@ -57,7 +58,7 @@ def _get_auth_preparation_result() -> _AuthPreparationResult:
     if not match:
         raise ValueError('Unable to get LoginToken.')
 
-    return _AuthPreparationResult(match.group(1), response.cookies)
+    return _AuthPreparationResult(match[1], response.cookies)
 
 
 def _get_api_token_key(html: str) -> str:
@@ -66,4 +67,4 @@ def _get_api_token_key(html: str) -> str:
     if not match:
         raise ValueError('Unable to get LoginToken.')
 
-    return match.group(1)
+    return match[1]
