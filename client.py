@@ -71,10 +71,13 @@ class MoodleClient:
         self._session.cookies.set_cookie(cookies.create_cookie(
             domain=DOMAIN, name='MoodleSession', value=session.moodle_session_cookie))
 
-    def get_content(self, url: str) -> Optional[bytes]:
+    def get_content(self, url: str) -> bytes:
         response = self._session.get(url, allow_redirects=False)
 
-        return response.content if response.status_code == HTTPStatus.OK else None
+        if response.status_code != HTTPStatus.OK:
+            raise ValueError('Unable to get content.')
+
+        return response.content
 
     def start_attempt(self, course_module_id: int) -> int:
         data = {
